@@ -1,0 +1,83 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "victron-modbus"
+version = "0.0.0"
+description = "Read Victron Energy Modbus devices"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [{ name = "ldoes" }]
+keywords = ["modbus", "victron", "energy-meter", "smart-meter"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: AsyncIO",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Home Automation",
+    "Typing :: Typed",
+]
+# Protocol + the device-modelling framework (modbus_connection.model). The caller
+# injects a ModbusUnit built from whichever backend they choose.
+dependencies = ["modbus-connection>=4.12.0,<5"]
+
+[project.optional-dependencies]
+# Concrete backend for the script/query.py CLI (pip install victron-modbus[cli]).
+cli = ["modbus-connection[tmodbus]>=4.12.0,<5"]
+
+[project.urls]
+Homepage = "https://github.com/ldoes/victron-modbus"
+Source = "https://github.com/ldoes/victron-modbus"
+Issues = "https://github.com/ldoes/victron-modbus/issues"
+Changelog = "https://github.com/ldoes/victron-modbus/releases"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6",
+    "mypy>=1.15",
+    "coverage[toml]>=7.6",
+    "ruff>=0.15.0",
+    "build>=1,<2",
+    # Tests run against the in-memory mock backend that ships with
+    # modbus-connection (its pytest plugin is auto-registered); no real backend
+    # or server is needed.
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/victron_modbus"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["victron_modbus"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 95
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src/victron_modbus"]
+warn_unreachable = true
+
+[tool.ruff]
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

@@ -1,0 +1,59 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  build:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check the release is on main
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "${RELEASE_SHA}" origin/main || {
+            echo "Release commit ${RELEASE_SHA} is not on main"
+            exit 1
+          }
+      - uses: astral-sh/setup-uv@v7
+      - name: Set package version from release tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          sed -i "s/^version = \"0\\.0\\.0\"$/version = \"${version}\"/" pyproject.toml
+          grep -qx "version = \"${version}\"" pyproject.toml || {
+            echo "Could not set the version to ${version} in pyproject.toml"
+            exit 1
+          }
+      - run: uv build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
