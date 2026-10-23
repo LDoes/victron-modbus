@@ -2,8 +2,8 @@
 """Query a Victron energy meter over Modbus and print every value.
 
 Connects over Modbus/TCP or Modbus/UDP, reads the whole device once, and dumps
-every sub-system's values to the terminal. Handy for checking a real VM-3P75CT,
-VM-3P5A without any other software.
+every sub-system's values to the terminal. Handy for checking a real Victron
+energy meter without any other software.
 
 The library only needs the connection protocol; this script selects a concrete
 backend, so install the ``cli`` extra first (``pip install victron-modbus[cli]``).
@@ -23,10 +23,11 @@ from modbus_connection.cli_helper import (
 )
 
 from victron_modbus import UnsupportedDeviceError, async_identify
+from victron_modbus.p1link import P1Link
 from victron_modbus.vm_3p5a import VM3P5A
 from victron_modbus.vm_3p75ct import VM3P75CT
 
-DEVICES = {"vm_3p75ct": VM3P75CT, "vm_3p5a": VM3P5A}
+DEVICES = {"vm_3p75ct": VM3P75CT, "vm_3p5a": VM3P5A, "p1link": P1Link}
 
 # (label, attribute name on the device) - the order in which sections are printed.
 SECTIONS: list[tuple[str, str]] = [

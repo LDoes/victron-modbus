@@ -17,6 +17,7 @@ Currently supported:
   current sensing).
 * :mod:`victron_modbus.vm_3p5a` - the VM-3P5A energy meter (current sensing
   through standard 5 A CTs).
+* :mod:`victron_modbus.p1link` - the P1Link energy meter interface.
 
 Other Victron products with a Modbus interface of their own can be added as
 further sub-packages without affecting existing ones.
@@ -39,6 +40,7 @@ from ._energy_meter import (
     configure_unit,
     retry_lost,
 )
+from .p1link import P1Link
 from .vm_3p5a import VM3P5A
 from .vm_3p75ct import VM3P75CT
 
@@ -55,6 +57,7 @@ __all__ = [
     "VM3P75CT",
     "EnergyMeter",
     "Info",
+    "P1Link",
     "Power",
     "UnsupportedDeviceError",
     "UpdateReport",
@@ -63,10 +66,11 @@ __all__ = [
 
 # Victron product ID (register 0x1000) -> device class. A new hardware revision
 # with the same register map gets its own product ID, but the same class.
-PRODUCTS: dict[int, type[VM3P75CT | VM3P5A]] = {
+PRODUCTS: dict[int, type[VM3P75CT | VM3P5A | P1Link]] = {
     0xA1B1: VM3P75CT,
     0xA1B5: VM3P75CT,  # newer hardware revision
     0xA1B2: VM3P5A,
+    0xC02F: P1Link,
 }
 
 
@@ -82,7 +86,7 @@ class UnsupportedDeviceError(Exception):
         self.product_id = product_id
 
 
-async def async_identify(unit: ModbusUnit) -> VM3P75CT | VM3P5A:
+async def async_identify(unit: ModbusUnit) -> VM3P75CT | VM3P5A | P1Link:
     """Read the product ID and return the matching device object.
 
     The identification it read is kept, so ``device.info`` (including the

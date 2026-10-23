@@ -41,9 +41,10 @@ product ID). It uses the tmodbus backend, so install it with
 | :----- | :--------- | :------ | :------------- |
 | Victron VM-3P75CT | `0xA1B1`, `0xA1B5` | `victron_modbus.vm_3p75ct` | total power/energy, PE-N voltage, frequency (also in 0.001 Hz, where the firmware has it), L1-L3 voltage/current/power/energy |
 | Victron VM-3P5A | `0xA1B2` | `victron_modbus.vm_3p5a` | total power/energy, PE-N voltage, frequency (also in 0.001 Hz, where the firmware has it), L1-L3 voltage/current/power/energy |
+| Victron P1Link | `0xC02F` | `victron_modbus.p1link` | total power/energy, L1-L3 voltage/current/power/energy |
 
 The VM-3P75CT reads phase current from the 16-bit current registers (0x3041,
-0x3049, 0x3051); the VM-3P5A from the 32-bit ones (0x3058-0x305D).
+0x3049, 0x3051); the VM-3P5A and P1Link from the 32-bit ones (0x3058-0x305D).
 
 Every device also exposes `info` (product ID, serial number, hardware
 version) and `power` (total and per-phase active power, positive while

@@ -22,13 +22,14 @@ from victron_modbus._energy_meter import (
     PhaseBlock,
     Power,
 )
+from victron_modbus.p1link import P1Link
 from victron_modbus.vm_3p5a import VM3P5A
 from victron_modbus.vm_3p75ct import VM3P75CT
 
 # Every model shares its polling and identification logic (``EnergyMeter``), so
 # tests of that logic run on one model. Tests of what differs per model, the
 # register maps, run on each of them.
-DEVICES = pytest.mark.parametrize("device_class", [VM3P75CT, VM3P5A])
+DEVICES = pytest.mark.parametrize("device_class", [VM3P75CT, VM3P5A, P1Link])
 
 
 @pytest.fixture
@@ -45,7 +46,7 @@ def _set_info(unit, product_id: int, serial: str = "HQ2345ABCDE") -> None:
 
 @pytest.mark.parametrize(
     ("product_id", "device_class"),
-    [(0xA1B1, VM3P75CT), (0xA1B5, VM3P75CT), (0xA1B2, VM3P5A)],
+    [(0xA1B1, VM3P75CT), (0xA1B5, VM3P75CT), (0xA1B2, VM3P5A), (0xC02F, P1Link)],
 )
 async def test_identify(mock_modbus_unit, product_id, device_class):
     """The product ID selects the device class."""
@@ -337,7 +338,7 @@ async def test_negative_power_is_a_valid_reading(mock_modbus_unit, device_class)
 
 async def test_unreported_hardware_version(mock_modbus_unit):
     """A device that reports no hardware version gets None, not 65535."""
-    _set_info(mock_modbus_unit, 0xA1B1)
+    _set_info(mock_modbus_unit, 0xC02F)
     mock_modbus_unit.holding[0x100B] = 0xFFFF
 
     device = await async_identify(mock_modbus_unit)
@@ -469,6 +470,17 @@ async def test_fine_frequency_unavailable(mock_modbus_unit, device_class):
     await device.async_update()
 
     assert device.meter.frequency_fine is None
+
+
+async def test_p1link_has_no_frequency(mock_modbus_unit):
+    """The P1Link reads no frequency at all, so it doesn't probe for it."""
+    mock_modbus_unit.fail_read(0x303E, AssertionError("must not read 0x303E"))
+
+    device = P1Link(mock_modbus_unit)
+    report = await device.async_update()
+
+    assert report.complete
+    assert "frequency_fine" not in device.meter.resolved_fields
 
 
 @pytest.mark.parametrize(
